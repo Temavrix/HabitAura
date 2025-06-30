@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ExerciseTile extends StatelessWidget {
   final String taskName;
@@ -116,10 +117,62 @@ class _ExercisePageState extends State<ExercisePage> {
     ],
   ];
 
+  void resetAllTasks(SharedPreferences prefs) {
+    for (int i = 0; i < ExeList.length; i++) {
+      ExeList[i][1] = false;
+      prefs.setBool('task_$i', false);
+    }
+    prefs.setString('last_checked_date', DateTime.now().toIso8601String());
+    setState(() {});
+  }
+
+  void loadTaskStatus(SharedPreferences prefs) {
+    for (int i = 0; i < ExeList.length; i++) {
+      bool? status = prefs.getBool('task_$i');
+      if (status != null) {
+        ExeList[i][1] = status;
+      }
+    }
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    checkAndResetTasksIfNewDay();
+  }
+
+  Future<void> checkAndResetTasksIfNewDay() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final lastDateStr = prefs.getString('last_checked_date');
+
+    if (lastDateStr != null) {
+      final lastDate = DateTime.parse(lastDateStr);
+      // Check if it's a different day
+      if (today.year != lastDate.year ||
+          today.month != lastDate.month ||
+          today.day != lastDate.day) {
+        resetAllTasks(prefs);
+      } else {
+        loadTaskStatus(prefs);
+      }
+    } else {
+      // First time launch
+      resetAllTasks(prefs);
+    }
+  }
+
+  Future<void> saveTaskStatus(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setBool('task_$index', ExeList[index][1]);
+  }
+
   void checkBoxChanged(int index) {
     setState(() {
       ExeList[index][1] = !ExeList[index][1];
     });
+    saveTaskStatus(index);
   }
 
   @override

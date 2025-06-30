@@ -18,7 +18,7 @@ class TodoList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 10),
       child: Slidable(
         endActionPane: ActionPane(
           motion: StretchMotion(),
@@ -54,7 +54,7 @@ class TodoList extends StatelessWidget {
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                   decorationColor: Colors.white,
-                  decorationThickness: 2,
+                  decorationThickness: 1,
                 ),
               ),
             ],

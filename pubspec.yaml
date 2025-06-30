@@ -38,6 +38,16 @@ dependencies:
   firebase_auth: ^4.17.4
   firebase_core: ^2.30.0
   cloud_firestore: ^4.15.8
+  shared_preferences: ^2.2.2
+  flutter_launcher_icons: ^0.13.1
+  table_calendar: ^3.0.9
+
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "lib/assets/Temavrix.jpg"
+
 
 dev_dependencies:
   flutter_test:
