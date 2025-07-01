@@ -22,13 +22,11 @@ class _CommitmentsState extends State<Commitments> {
 
   void saveNewTask(String taskName) {
     if (taskName.trim().isEmpty) return;
-
     toDoRef.add({
       'task': taskName.trim(),
       'completed': false,
       'createdAt': Timestamp.now(),
     });
-
     _controller.clear();
   }
 
@@ -41,6 +39,14 @@ class _CommitmentsState extends State<Commitments> {
 
   void deleteTask(String docId) {
     toDoRef.doc(docId).delete();
+  }
+
+  int getCompletedTime(QueryDocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    if (data.containsKey('completedAt') && data['completedAt'] is Timestamp) {
+      return (data['completedAt'] as Timestamp).millisecondsSinceEpoch;
+    }
+    return 0;
   }
 
   @override
@@ -58,27 +64,23 @@ class _CommitmentsState extends State<Commitments> {
           if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           }
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           final docs = snapshot.data!.docs;
-
           final uncompletedTasks =
               docs.where((doc) => !(doc['completed'] ?? false)).toList()..sort(
                 (a, b) => (a['createdAt'] as Timestamp).compareTo(
                   b['createdAt'] as Timestamp,
                 ),
               );
-
           // Group completed tasks by date
           Map<String, List<QueryDocumentSnapshot>> completedTaskGroups = {};
-
           for (var doc in docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['completed'] ?? false) {
-              Timestamp? completedAt = data['completedAt'];
+              Timestamp? completedAt =
+                  data.containsKey('completedAt') ? data['completedAt'] : null;
               String dateLabel =
                   completedAt != null
                       ? DateTime.fromMillisecondsSinceEpoch(
@@ -99,9 +101,7 @@ class _CommitmentsState extends State<Commitments> {
           return ListView(
             children: [
               const SizedBox(height: 10),
-
               const CommitmentsCalendar(),
-
               const Divider(thickness: 1),
 
               ...uncompletedTasks.map((doc) {
@@ -117,27 +117,16 @@ class _CommitmentsState extends State<Commitments> {
               }),
 
               const SizedBox(height: 20),
-
-              // Show completed tasks under their completion date
+              // Show completed tasks grouped by date
               ...(() {
                 final entries = completedTaskGroups.entries.toList();
-                entries.sort(
-                  (a, b) => b.key.compareTo(a.key),
-                ); // Sort by date descending
+                entries.sort((a, b) => b.key.compareTo(a.key));
                 return entries.expand((entry) {
                   // Sort each group's tasks by completedAt descending
-                  entry.value.sort((a, b) {
-                    final aTime =
-                        (a['completedAt'] as Timestamp?)
-                            ?.millisecondsSinceEpoch ??
-                        0;
-                    final bTime =
-                        (b['completedAt'] as Timestamp?)
-                            ?.millisecondsSinceEpoch ??
-                        0;
-                    return bTime.compareTo(aTime);
-                  });
-
+                  entry.value.sort(
+                    (a, b) =>
+                        getCompletedTime(b).compareTo(getCompletedTime(a)),
+                  );
                   return [
                     Padding(
                       padding: const EdgeInsets.symmetric(

@@ -32,7 +32,7 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.black,
-        title: Text("AuraHabit"),
+        title: Text("HabitAura"),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
